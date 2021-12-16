@@ -96,7 +96,7 @@ setup(name="ctypeslib3",
       author="Thomas Heller",
       author_email="theller@ctypes.org",
       license="MIT License",
-      version = "0.5.6",
+      version = "0.5.7",
 
       classifiers = classifiers,
 
