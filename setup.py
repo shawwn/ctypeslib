@@ -84,7 +84,7 @@ classifiers = [
     ]
 
 
-setup(name="ctypeslib",
+setup(name="ctypeslib3",
       packages = ['ctypeslib',
                   'ctypeslib.codegen',
                   'ctypeslib.contrib',
