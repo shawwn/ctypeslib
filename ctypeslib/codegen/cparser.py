@@ -70,6 +70,7 @@ class IncludeParser(object):
                                     stdout=subprocess.PIPE,
                                     stdin=subprocess.PIPE)
             data, err = proc.communicate()
+            data = data.decode('utf-8')
         finally:
             if not self.options.keep_temporary_files:
                 os.remove(fname)
@@ -96,6 +97,7 @@ class IncludeParser(object):
                                     stderr=subprocess.PIPE,
                                     stdin=subprocess.PIPE)
             data, err = proc.communicate()
+            data = data.decode('utf-8')
             retcode = proc.wait()
             if retcode:
                 raise CompilerError(err)
@@ -121,6 +123,7 @@ class IncludeParser(object):
                                 stderr=subprocess.PIPE,
                                 stdin=subprocess.PIPE)
         data, err = proc.communicate()
+        data = data.decode('utf-8')
         retcode = proc.wait()
         invalid_symbols = set()
         if retcode:
