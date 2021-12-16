@@ -13,7 +13,7 @@ else:
     import xml.sax
     base = xml.sax.ContentHandler
 
-import typedesc
+from . import typedesc
 import sys
 try:
     set
@@ -54,7 +54,7 @@ class GCCXML_Parser(base):
         def parse(self, xmlfile):
             for event, node in cElementTree.iterparse(xmlfile, events=("start", "end")):
                 if event == "start":
-                    self.startElement(node.tag, dict(node.items()))
+                    self.startElement(node.tag, dict(list(node.items())))
                 else:
                     if node.text:
                         self.characters(node.text)
@@ -353,7 +353,7 @@ class GCCXML_Parser(base):
             aliases[name] = a
             self.all[name] = a
 
-        for name, a in aliases.items():
+        for name, a in list(aliases.items()):
             value = a.alias
             # the value should be either in namespace...
             if value in namespace:
@@ -382,7 +382,7 @@ class GCCXML_Parser(base):
         self.get_macros(self.cpp_data.get("functions"))
 
         remove = []
-        for n, i in self.all.items():
+        for n, i in list(self.all.items()):
             location = getattr(i, "location", None)
             if location:
                 fil, line = location.split(":")
@@ -399,7 +399,7 @@ class GCCXML_Parser(base):
 
         # Now we can build the namespace.
         namespace = {}
-        for i in self.all.values():
+        for i in list(self.all.values()):
             if not isinstance(i, interesting):
                 continue  # we don't want these
             name = getattr(i, "name", None)
@@ -409,7 +409,7 @@ class GCCXML_Parser(base):
         self.get_aliases(self.cpp_data.get("aliases"), namespace)
 
         result = []
-        for i in self.all.values():
+        for i in list(self.all.values()):
             if isinstance(i, interesting):
                 result.append(i)
 

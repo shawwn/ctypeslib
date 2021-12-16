@@ -1,5 +1,5 @@
 import sys, os, re, tempfile, linecache
-import gccxmlparser, typedesc
+from . import gccxmlparser, typedesc
 import subprocess # the subprocess module is required
 
 try:
@@ -10,21 +10,21 @@ except NameError:
 if sys.platform == "win32":
 
     def _locate_gccxml():
-        import _winreg
+        import winreg
         for subkey, valuename in [
             (r"Software\Kitware\gccxml 0.9.0", ""),
             (r"Software\Kitware\GCCXMLComplete 0.9.0", ""),
             (r"Software\gccxml", "loc"),
             (r"Software\Kitware\GCC_XML", "loc"),
             ]:
-            for root in (_winreg.HKEY_CURRENT_USER, _winreg.HKEY_LOCAL_MACHINE):
+            for root in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
                 try:
-                    hkey = _winreg.OpenKey(root, subkey, 0, _winreg.KEY_READ)
-                except WindowsError, detail:
+                    hkey = winreg.OpenKey(root, subkey, 0, winreg.KEY_READ)
+                except WindowsError as detail:
                     if detail.errno != 2:
                         raise
                 else:
-                    return _winreg.QueryValueEx(hkey, valuename)[0] + r"\bin"
+                    return winreg.QueryValueEx(hkey, valuename)[0] + r"\bin"
 
     loc = _locate_gccxml()
     if loc:
@@ -65,7 +65,7 @@ class IncludeParser(object):
             if lines and self.options.flags:
                 args.extend(self.options.flags)
             if self.options.verbose:
-                print >> sys.stderr, "running:", " ".join(args)
+                print("running:", " ".join(args), file=sys.stderr)
             proc = subprocess.Popen(args,
                                     stdout=subprocess.PIPE,
                                     stdin=subprocess.PIPE)
@@ -74,7 +74,7 @@ class IncludeParser(object):
             if not self.options.keep_temporary_files:
                 os.remove(fname)
             else:
-                print >> sys.stderr, "Info: file '%s' not removed" % fname
+                print("Info: file '%s' not removed" % fname, file=sys.stderr)
         return [line[len("#define "):]
                 for line in data.splitlines()
                 if line.startswith("#define ")]
@@ -90,7 +90,7 @@ class IncludeParser(object):
             args.extend(self.options.flags)
         try:
             if self.options.verbose:
-                print >> sys.stderr, "running:", " ".join(args)
+                print("running:", " ".join(args), file=sys.stderr)
             proc = subprocess.Popen(args,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
@@ -103,7 +103,7 @@ class IncludeParser(object):
             if not self.options.keep_temporary_files:
                 os.remove(fname)
             else:
-                print >> sys.stderr, "Info: file '%s' not removed" % fname
+                print("Info: file '%s' not removed" % fname, file=sys.stderr)
 
     def try_create_xml(self, lines, xmlfile):
         """Create a temporary source file, 'compile' with gccxml to an
@@ -115,7 +115,7 @@ class IncludeParser(object):
             args.extend(self.options.flags)
 
         if self.options.verbose:
-            print >> sys.stderr, "running:", " ".join(args)
+            print("running:", " ".join(args), file=sys.stderr)
         proc = subprocess.Popen(args,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
@@ -185,7 +185,7 @@ class IncludeParser(object):
         aliases = {}
         functions = {}
         excluded = {}
-        for name, value in defines.iteritems():
+        for name, value in defines.items():
             why = self.is_excluded(name, value)
             if not why:
                 result[name] = value
@@ -223,13 +223,13 @@ class IncludeParser(object):
                 break
             if self.options.verbose:
                 if i == 0:
-                    print >> sys.stderr, "compiler errors caused by '-c' flag.\n" \
-                          "Trying to resolve them in multiple passes."
-                print >> sys.stderr, "pass %d:" % (i + 1)
+                    print("compiler errors caused by '-c' flag.\n" \
+                          "Trying to resolve them in multiple passes.", file=sys.stderr)
+                print("pass %d:" % (i + 1), file=sys.stderr)
             for n in invalid_symbols:
                 del defines[n]
                 if self.options.verbose:
-                    print >> sys.stderr, "\t", n
+                    print("\t", n, file=sys.stderr)
         else:
             raise CompilerError()
 
@@ -238,7 +238,7 @@ class IncludeParser(object):
         if not self.options.keep_temporary_files:
             os.remove(fname)
         else:
-            print >> sys.stderr, "Info: file '%s' not removed" % fname
+            print("Info: file '%s' not removed" % fname, file=sys.stderr)
 
         types = {}
         for i in items:
@@ -248,7 +248,7 @@ class IncludeParser(object):
                 typ = i.returns
                 try:
                     typ = self.c_type_name(i.returns)
-                except TypeError, detail:
+                except TypeError as detail:
                     # XXX Warning?
                     ## print >> sys.stderr,  "skipped #define %s %s" % (name, defines[name]), detail
                     pass
@@ -260,7 +260,7 @@ class IncludeParser(object):
         source = []
         for fname in include_files:
             source.append('#include "%s"' % fname)
-        for name, value in types.iteritems():
+        for name, value in types.items():
             source.append("const %s cpp_sym_%s = (const %s) %s;" % (types[name], name, types[name], name))
         self.create_xml(source, xmlfile)
 
@@ -276,11 +276,11 @@ class IncludeParser(object):
             return self.c_type_name(tp.typ)
         elif isinstance(tp, typedesc.Structure):
             return tp.name
-        raise TypeError, type(tp).__name__
+        raise TypeError(type(tp).__name__)
 
     def dump_as_cdata(self, f, mapping, name):
             f.write('  <CPP_DUMP name="%s"><![CDATA[' % name)
-            names = mapping.keys()
+            names = list(mapping.keys())
             names.sort()
             for n in names:
                 v = mapping[n]
@@ -300,37 +300,37 @@ class IncludeParser(object):
 
         if options.cpp_symbols:
             if options.verbose:
-                print >> sys.stderr, "compile for syntax check ..."
+                print("compile for syntax check ...", file=sys.stderr)
             # compile the input files to check for compilation errors,
             # before trying the fancy stuff with cpp_symbols.
             self.create_final_xml(include_files, types, None)
 
         if options.cpp_symbols:
             if options.verbose:
-                print >> sys.stderr, "finding definitions ..."
+                print("finding definitions ...", file=sys.stderr)
             defines = self.get_defines(include_files)
             if options.verbose:
-                print >> sys.stderr, "%d found" % len(defines)
+                print("%d found" % len(defines), file=sys.stderr)
 
-                print >> sys.stderr, "filtering definitions ..."
+                print("filtering definitions ...", file=sys.stderr)
             aliases, functions, excluded, defines = self.filter_definitions(defines)
             if options.verbose:
-                print >> sys.stderr, "%d values, %d aliases" % (len(defines), len(aliases))
+                print("%d values, %d aliases" % (len(defines), len(aliases)), file=sys.stderr)
 
             if options.verbose:
-                print >> sys.stderr, "finding definitions types ..."
+                print("finding definitions types ...", file=sys.stderr)
 
             try:
                 # invoke C++ template magic
                 types = self.find_types(include_files, defines)
                 if options.verbose:
-                    print >> sys.stderr, "found %d types ..." % len(types)
+                    print("found %d types ..." % len(types), file=sys.stderr)
             except CompilerError:
-                print >> sys.stderr, "Could not determine the types of #define symbols."
+                print("Could not determine the types of #define symbols.", file=sys.stderr)
                 types = {}
 
         if options.verbose:
-            print >> sys.stderr, "creating xml output file ..."
+            print("creating xml output file ...", file=sys.stderr)
         self.create_final_xml(include_files, types, options.xmlfile)
 
         # Include additional preprecessor definitions into the XML file.

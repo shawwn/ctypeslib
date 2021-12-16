@@ -3,9 +3,9 @@ import os
 import unittest
 import tempfile
 try:
-    from cStringIO import StringIO
+    from io import StringIO
 except ImportError:
-    from StringIO import StringIO
+    from io import StringIO
 
 import ctypes
 from ctypes.util import find_library
@@ -40,14 +40,14 @@ class ConstantsTest(unittest.TestCase):
             ofi = StringIO()
             generate_code(xmlfile, ofi, **kw)
             namespace = {}
-            exec ofi.getvalue() in namespace
+            exec(ofi.getvalue(), namespace)
 ##            print ofi.getvalue()
             return ADict(namespace)
 
         finally:
             os.unlink(hfile)
             if dump:
-                print open(xmlfile).read()
+                print(open(xmlfile).read())
             os.unlink(xmlfile)
 
     def test_longlong(self):
@@ -58,13 +58,13 @@ class ConstantsTest(unittest.TestCase):
         unsigned long long ui2 = 0x8000000000000000ULL;
         unsigned long long ui1 = 0x7FFFFFFFFFFFFFFFULL;
         """)
-        self.failUnlessEqual(ns.i1, 0x7FFFFFFFFFFFFFFF)
-        self.failUnlessEqual(ns.i2, -1)
-        self.failUnlessEqual(ns.ui1, 0x7FFFFFFFFFFFFFFF)
+        self.assertEqual(ns.i1, 0x7FFFFFFFFFFFFFFF)
+        self.assertEqual(ns.i2, -1)
+        self.assertEqual(ns.ui1, 0x7FFFFFFFFFFFFFFF)
 
         # These two tests fail on 64-bit Linux! gccxml bug, I assume...
-        self.failUnlessEqual(ns.ui3, 0xFFFFFFFFFFFFFFFF)
-        self.failUnlessEqual(ns.ui2, 0x8000000000000000)
+        self.assertEqual(ns.ui3, 0xFFFFFFFFFFFFFFFF)
+        self.assertEqual(ns.ui2, 0x8000000000000000)
 
     def test_int(self):
         ns = self.convert("""
@@ -75,11 +75,11 @@ class ConstantsTest(unittest.TestCase):
         int minint = -2147483648;
         """)
 
-        self.failUnlessEqual(ns.zero, 0)
-        self.failUnlessEqual(ns.one, 1)
-        self.failUnlessEqual(ns.minusone, -1)
-        self.failUnlessEqual(ns.maxint, 2147483647)
-        self.failUnlessEqual(ns.minint, -2147483648)
+        self.assertEqual(ns.zero, 0)
+        self.assertEqual(ns.one, 1)
+        self.assertEqual(ns.minusone, -1)
+        self.assertEqual(ns.maxint, 2147483647)
+        self.assertEqual(ns.minint, -2147483648)
 
     def test_uint(self):
         ns = self.convert("""
@@ -89,10 +89,10 @@ class ConstantsTest(unittest.TestCase):
         unsigned int maxuint = 0xFFFFFFFF;
         """)
 
-        self.failUnlessEqual(ns.zero, 0)
-        self.failUnlessEqual(ns.one, 1)
-        self.failUnlessEqual(ns.minusone, 4294967295)
-        self.failUnlessEqual(ns.maxuint, 0xFFFFFFFF)
+        self.assertEqual(ns.zero, 0)
+        self.assertEqual(ns.one, 1)
+        self.assertEqual(ns.minusone, 4294967295)
+        self.assertEqual(ns.maxuint, 0xFFFFFFFF)
 
     def test_doubles(self):
         ns = self.convert("""
@@ -103,11 +103,11 @@ class ConstantsTest(unittest.TestCase):
         double d = 0.0036;
         float f = 2.5;
         """, "-c")
-        self.failUnlessAlmostEqual(ns.A, 0.9642)
-        self.failUnlessAlmostEqual(ns.B, 1.0)
-        self.failUnlessAlmostEqual(ns.C, 0.8249)
-        self.failUnlessAlmostEqual(ns.d, 0.0036)
-        self.failUnlessAlmostEqual(ns.f, 2.5)
+        self.assertAlmostEqual(ns.A, 0.9642)
+        self.assertAlmostEqual(ns.B, 1.0)
+        self.assertAlmostEqual(ns.C, 0.8249)
+        self.assertAlmostEqual(ns.d, 0.0036)
+        self.assertAlmostEqual(ns.f, 2.5)
 
     def test_char(self):
         ns = self.convert("""
@@ -117,17 +117,17 @@ class ConstantsTest(unittest.TestCase):
         wchar_t w_zero = 0;
         """)
 
-        self.failUnlessEqual(ns.x, 'x')
-        self.failUnlessEqual(ns.X, 'X')
+        self.assertEqual(ns.x, 'x')
+        self.assertEqual(ns.X, 'X')
 
-        self.failUnlessEqual(type(ns.x), str)
-        self.failUnlessEqual(type(ns.X), unicode)
+        self.assertEqual(type(ns.x), str)
+        self.assertEqual(type(ns.X), str)
 
-        self.failUnlessEqual(ns.zero, '\0')
-        self.failUnlessEqual(ns.w_zero, '\0')
+        self.assertEqual(ns.zero, '\0')
+        self.assertEqual(ns.w_zero, '\0')
 
-        self.failUnlessEqual(type(ns.zero), str)
-        self.failUnlessEqual(type(ns.w_zero), unicode)
+        self.assertEqual(type(ns.zero), str)
+        self.assertEqual(type(ns.w_zero), str)
 
     def test_defines(self):
         ns = self.convert("""
@@ -145,19 +145,19 @@ class ConstantsTest(unittest.TestCase):
         #endif
         """, "-c")
 
-        self.failUnlessEqual(ns.zero, 0)
-        self.failUnlessEqual(ns.one, 1)
-        self.failUnlessEqual(ns.minusone, -1)
-        self.failUnlessEqual(ns.maxint, 2147483647)
-        self.failUnlessEqual(ns.LARGE, 0xFFFFFFFF)
+        self.assertEqual(ns.zero, 0)
+        self.assertEqual(ns.one, 1)
+        self.assertEqual(ns.minusone, -1)
+        self.assertEqual(ns.maxint, 2147483647)
+        self.assertEqual(ns.LARGE, 0xFFFFFFFF)
 ##        self.failUnlessEqual(ns.VERYLARGE, 0xFFFFFFFFFFFFFFFF)
 ##        self.failUnlessEqual(ns.minint, -2147483648)
 
-        self.failUnlessEqual(ns.spam, "spam")
-        self.failUnlessEqual(type(ns.spam), str)
+        self.assertEqual(ns.spam, "spam")
+        self.assertEqual(type(ns.spam), str)
 
-        self.failUnlessEqual(ns.foo, "foo")
-        self.failUnlessEqual(type(ns.foo), unicode)
+        self.assertEqual(ns.foo, "foo")
+        self.assertEqual(type(ns.foo), str)
 
     def test_array_nosize(self):
         ns = self.convert("""
@@ -167,8 +167,8 @@ class ConstantsTest(unittest.TestCase):
         };
         """, "-c")
         # for 'typedef char array[];', gccxml does XXX
-        self.failUnlessEqual(ctypes.sizeof(ns.blah), 0)
-        self.failUnlessEqual(ctypes.sizeof(ns.array), 0)
+        self.assertEqual(ctypes.sizeof(ns.blah), 0)
+        self.assertEqual(ctypes.sizeof(ns.array), 0)
 
     def test_docstring(self):
         from ctypes import CDLL
@@ -185,8 +185,8 @@ class ConstantsTest(unittest.TestCase):
         )
         prototype = "void * malloc(size_t".replace(" ", "")
         docstring = ns.malloc.__doc__.replace(" ", "")
-        self.failUnlessEqual(docstring[:len(prototype)], prototype)
-        self.failUnless("malloc.h" in ns.malloc.__doc__)
+        self.assertEqual(docstring[:len(prototype)], prototype)
+        self.assertTrue("malloc.h" in ns.malloc.__doc__)
 
     def test_emptystruct(self):
         ns = self.convert("""
@@ -194,7 +194,7 @@ class ConstantsTest(unittest.TestCase):
         } EMPTY;
         """)
 
-        self.failUnlessEqual(ctypes.sizeof(ns.tagEMPTY), 0)
+        self.assertEqual(ctypes.sizeof(ns.tagEMPTY), 0)
 
 
 if __name__ == "__main__":

@@ -18,23 +18,23 @@ class ByrefTest(unittest.TestCase):
         array = (c_int * 8)()
         # Passing an array is the same as passing a byref or pointer
         # to the array
-        self.failUnlessEqual(addressof(array), testfunc(array))
-        self.failUnlessEqual(addressof(array), testfunc(byref(array)))
-        self.failUnlessEqual(addressof(array), testfunc(pointer(array)))
+        self.assertEqual(addressof(array), testfunc(array))
+        self.assertEqual(addressof(array), testfunc(byref(array)))
+        self.assertEqual(addressof(array), testfunc(pointer(array)))
 
     def test_byref_fundamental(self):
         obj = c_int()
-        self.failUnlessEqual(addressof(obj), testfunc(byref(obj)))
-        self.failUnlessEqual(addressof(obj), testfunc(pointer(obj)))
+        self.assertEqual(addressof(obj), testfunc(byref(obj)))
+        self.assertEqual(addressof(obj), testfunc(pointer(obj)))
 
     def test_byref_at(self):
         array = (c_int * 8)()
-        self.failUnlessEqual(addressof(array) + 0,
+        self.assertEqual(addressof(array) + 0,
                              testfunc(byref_at(array, 0)))
-        self.failUnlessEqual(addressof(array) + 1,
+        self.assertEqual(addressof(array) + 1,
                              testfunc(byref_at(array, 1)))
         for ofs in range(8 * sizeof(c_int)):
-            self.failUnlessEqual(addressof(array) + ofs,
+            self.assertEqual(addressof(array) + ofs,
                                  testfunc(byref_at(array, ofs)))
 
 if __name__ == "__main__":

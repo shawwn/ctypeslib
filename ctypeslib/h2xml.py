@@ -1,5 +1,5 @@
 """h2xml - convert C include file(s) into an xml file by running gccxml."""
-import sys, os, ConfigParser
+import sys, os, configparser
 from ctypeslib.codegen import cparser
 from optparse import OptionParser
 
@@ -9,11 +9,11 @@ def compile_to_xml(argv):
 
     # Hm, should there be a way to disable the config file?
     # And then, this should be done AFTER the parameters are processed.
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     try:
         config.read("h2xml.cfg")
-    except ConfigParser.ParsingError, detail:
-        print >> sys.stderr, detail
+    except configparser.ParsingError as detail:
+        print(detail, file=sys.stderr)
         return 1
 
     parser = OptionParser("usage: %prog includefile ... [options]")
@@ -68,8 +68,8 @@ def compile_to_xml(argv):
     options, files = parser.parse_args(argv[1:])
 
     if not files:
-        print "Error: no files to process"
-        print >> sys.stderr, __doc__
+        print("Error: no files to process")
+        print(__doc__, file=sys.stderr)
         return 1
 
     options.flags = options.gccxml_options
@@ -84,8 +84,8 @@ def main(argv=None):
 
     try:
         compile_to_xml(argv)
-    except cparser.CompilerError, detail:
-        print >> sys.stderr, "CompilerError:", detail
+    except cparser.CompilerError as detail:
+        print("CompilerError:", detail, file=sys.stderr)
         return 1
 
 if __name__ == "__main__":

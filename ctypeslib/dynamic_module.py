@@ -2,7 +2,7 @@
 
 See the 'include' function for usage information.
 """
-import sys, os, time, bz2, cPickle, tempfile
+import sys, os, time, bz2, pickle, tempfile
 try:
     # md5 is deprecated in Python 2.5, so use hashlib if available
     from hashlib import md5
@@ -53,17 +53,17 @@ def include(code, persist=True, compilerflags=["-c"]):
         open(h_file, "w").write(fullcode)
     if is_newer(h_file, tdesc_file):
         if is_newer(h_file, xml_file):
-            print >> sys.stderr, "# Compiling into...", xml_file
+            print("# Compiling into...", xml_file, file=sys.stderr)
             from ctypeslib import h2xml
             h2xml.compile_to_xml(["h2xml",
                                   "-I", os.path.dirname(fnm), "-q",
                                   h_file,
                                   "-o", xml_file] + list(compilerflags))
         if is_newer(xml_file, tdesc_file):
-            print >> sys.stderr, "# Parsing XML file and compressing type descriptions..."
+            print("# Parsing XML file and compressing type descriptions...", file=sys.stderr)
             decls = gccxmlparser.parse(xml_file)
             ofi = bz2.BZ2File(tdesc_file, "w")
-            data = cPickle.dump(decls, ofi, -1)
+            data = pickle.dump(decls, ofi, -1)
             os.remove(xml_file) # not needed any longer.
         
     frame = sys._getframe(1)
@@ -167,7 +167,7 @@ class Generator(codegenerator.Generator):
         # Find which of the libraries in 'searched_dlls' exports the
         # function 'func'.  Return name of library or None.
         name = func.name
-        for dllname, dll in self.searched_dlls.items():
+        for dllname, dll in list(self.searched_dlls.items()):
             try:
                 getattr(dll, name)
             except AttributeError:
@@ -183,7 +183,7 @@ class Generator(codegenerator.Generator):
         restype = self.type_name(func.returns)
         errcheck = self.namespace.get("%s_errcheck" % restype, None)
         if errcheck is not None:
-            print >> self.stream, "%s.errcheck = %s_errcheck" % (func.name, restype)
+            print("%s.errcheck = %s_errcheck" % (func.name, restype), file=self.stream)
 
 class CodeGenerator(object):
     """Dynamic, incremental code generation.  The generated code is
@@ -204,7 +204,7 @@ class CodeGenerator(object):
             self._newlines = ifi.newlines or "\n"
             self.output = open(src_path, "ab")
         data = open(tdesc_file, "rb").read()
-        decls = cPickle.loads(bz2.decompress(data))
+        decls = pickle.loads(bz2.decompress(data))
         names = {}
         self.namespace = ns
         done = set()
@@ -221,7 +221,7 @@ class CodeGenerator(object):
             names[name] = i
         self.decls = names
 
-        dlls = dict([o for o in ns.items()
+        dlls = dict([o for o in list(ns.items())
                      if isinstance(o[1], ctypes.CDLL)
                      and not isinstance(o[1], ctypes.PyDLL)])
 
@@ -252,7 +252,7 @@ class CodeGenerator(object):
 
         code = imports + code
 
-        exec code in self.namespace
+        exec(code, self.namespace)
         # I guess when this fails, it means that the dll exporting
         # this function is not in searched_dlls.  So we should
         # probably raise a different exception.

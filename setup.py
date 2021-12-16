@@ -62,7 +62,7 @@ class test(Command):
 
         for name in self.tests:
             package = __import__(name, globals(), locals(), ['*'])
-            print "Testing package", name, (sys.version, sys.platform, os.name)
+            print(("Testing package", name, (sys.version, sys.platform, os.name)))
             ctypeslib.test.run_tests(package,
                                      "test_*.py",
                                      self.verbose,
