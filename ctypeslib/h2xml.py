@@ -82,11 +82,11 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
 
-    try:
-        compile_to_xml(argv)
-    except cparser.CompilerError as detail:
-        print("CompilerError:", detail, file=sys.stderr)
-        return 1
+    #try:
+    compile_to_xml(argv)
+    #except cparser.CompilerError as detail:
+    #    print("CompilerError:", detail, file=sys.stderr)
+    #    return 1
 
 if __name__ == "__main__":
     sys.exit(main())
